@@ -1,0 +1,184 @@
+﻿@model IEnumerable<HeroManagement.Models.Hero>
+
+@{
+    ViewData["Title"] = "Hero Management";
+}
+
+<style>
+    /* 更高優先權藍色主題（具體、必要時使用 !important） */
+    table.hero-table.table {
+        width: 100%;
+        border-collapse: collapse;
+            /* table 本身底色不用設，讓 cell 控制底色 */
+    }
+
+    /* 表頭：深藍、白字、圓角 */
+    table.hero-table.table thead th {
+        background-color: #2b6fb3 !important;
+        color: #ffffff !important;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid rgba(0,0,0,0.08);
+    }
+    /* 圓角（左右兩端）*/
+    table.hero-table.table thead th:first-child {
+        border-top-left-radius: 6px;
+    }
+    table.hero-table.table thead th:last-child {
+        border-top-right-radius: 6px;
+    }
+
+    table.hero-table.table tbody tr:nth-child(odd) td {
+    background-color: #f6fbff !important;
+    }
+    table.hero-table.table tbody tr:nth-child(even) td {
+        background-color: #edf7fc !important;
+    }
+
+    table.hero-table.table td {
+        padding: 10px;
+        border: 1px solid rgba(0,0,0,0.06);
+        text-align: center;
+        vertical-align: middle;
+        color: #042b4a;
+    }
+
+    table.hero-table.table tbody tr:hover td {
+        background-color: #cde9ff !important;
+    }
+
+    .action-btn {
+        min-width: 60px;
+    }
+
+    .btn.btn-success {
+        background-color: #2b6fb3;
+        border-color: #245c93;
+        color: #fff;
+    }
+
+    .btn.btn-outline-primary {
+        color: #2b6fb3;
+        border-color: #2b6fb3;
+    }
+
+    .btn.btn-outline-primary:hover {
+        background-color: #2b6fb3;
+        color: #fff;
+    }
+</style>
+
+<h2>Hero Management</h2>
+
+<!-- 下拉選單+按鈕 -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <select id="heroSelectTop" class="form-select">
+            <option value="">-- Select Hero ID --</option>
+            @foreach(var hero in Model)
+            {
+                <option value="@hero.Id">@hero.Id</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100" onclick="getOne('heroSelectTop')">Get One</button>
+    </div>
+
+    <div class="col-md-2">
+        <a asp-action="Index" class="btn btn-secondary w-100">Get All</a>
+    </div>
+</div>
+
+<!-- 表格 -->
+<table class="table hero-table table-bordered">
+    <thead>
+        <tr>
+            <th>Action</th>
+            <th>HeroName</th>
+            <th>FirstName</th>
+            <th>LastName</th>
+            <th>City</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var hero in Model)
+        {
+            <tr>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@hero.Id"
+                       class="btn btn-sm btn-outline-primary action-btn">
+                        Edit
+                    </a>
+
+                    <a asp-action="Delete" asp-route-id="@hero.Id"
+                       class="btn btn-sm btn-outline-danger action-btn">
+                        Delete
+                    </a>
+                </td>
+                <td>@hero.HeroName</td>
+                <td>@hero.FirstName</td>
+                <td>@hero.LastName</td>
+                <td>@hero.City</td>
+            </tr>
+        }                      
+    </tbody>
+</table>
+
+<!-- 新增 -->
+<a asp-action="Create" class="btn btn-success">Add New Hero</a>
+
+@section Scripts{
+    <script>
+        async function getOne(selectId){
+            const el = document.getElementById(selectId);
+            const id = el ? el.value : "";
+            if(!id){
+                alert("Please select a Hero ID");
+                return;
+            }
+
+            // 用 Razor 產生正確的 URL（避免 hard-code 路徑）
+            const url = '@Url.Action("GetOne", "Heroes")' + '?id=' + encodeURIComponent(id);
+
+            try {
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) {
+                    if (res.status === 404) { alert('Hero not found'); return; }
+                    throw new Error('Request failed: ' + res.status);
+                }
+
+                const hero = await res.json();
+
+                const tbody = document.querySelector('table.hero-table tbody');
+                // 用安全的 escapeHtml 避免 XSS
+                tbody.innerHTML = `
+                    <tr>
+                        <td>
+                            <a href="${'@Url.Action("Edit","Heroes")'}/${hero.id}" class="btn btn-sm btn-outline-primary action-btn">Edit</a>
+                            <a href="${'@Url.Action("Delete","Heroes")'}/${hero.id}" class="btn btn-sm btn-outline-danger action-btn">Delete</a>
+                        </td>
+                        <td>${escapeHtml(hero.heroName ?? '')}</td>
+                        <td>${escapeHtml(hero.firstName ?? '')}</td>
+                        <td>${escapeHtml(hero.lastName ?? '')}</td>
+                        <td>${escapeHtml(hero.city ?? '')}</td>
+                    </tr>
+                `;
+            } catch (err) {
+                console.error(err);
+                alert('取得資料發生錯誤，請查看瀏覽器 Console');
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (unsafe == null) return '';
+            return String(unsafe)
+                .replaceAll('&','&amp;')
+                .replaceAll('<','&lt;')
+                .replaceAll('>','&gt;')
+                .replaceAll('"','&quot;')
+                .replaceAll("'",'&#39;');
+        }
+    </script>
+}

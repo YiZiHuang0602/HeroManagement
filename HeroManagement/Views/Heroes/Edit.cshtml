@@ -1,0 +1,46 @@
+﻿@model HeroManagement.Models.Hero
+
+@{
+    ViewData["Title"] = "Add / Edit Hero";
+    bool isEdit = Model.Id > 0;
+}
+
+<h4>@(isEdit ? "Edit Hero" : "Add Hero")</h4>
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+   @if (isEdit)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
+
+    <div class="mb-2">
+        <label>HeroName</label>
+        <input asp-for="HeroName" class="form-control" />
+        <span asp-validation-for="HeroName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label>FirstName</label>
+        <input asp-for="FirstName" class="form-control" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-2">
+        <label>LastName</label>
+        <input asp-for="LastName" class="form-control" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>City</label>
+        <input asp-for="City" class="form-control" />
+        <span asp-validation-for="City" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
